@@ -47,6 +47,7 @@ export const createPortfolio = async (req, res) => {
   }
 };
 
+// Get portfolios for the logged-in user:
 export const getMyPortfolios = async (req, res) => {
   try {
     const { data, error } = await supabase

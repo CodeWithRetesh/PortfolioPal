@@ -1,85 +1,111 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/api";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+
+import Sidebar from "@/components/dashboard/Sidebar";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DashboardStats from "@/components/dashboard/DashboardStats";
+import PortfolioGrid from "@/components/dashboard/PortfolioGrid";
+import QuickActions from "@/components/dashboard/QuickActions";
 
 export default function DashboardPage() {
   const router = useRouter();
+
   const [user, setUser] = useState(null);
   const [portfolios, setPortfolios] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    loadDashboard();
+  }, []);
+
+  async function loadDashboard() {
+    const token = Cookies.get("token");
 
     if (!token) {
       router.push("/login");
       return;
     }
 
-    const fetchData = async () => {
-      try {
-        const userRes = await api.get("/auth/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+    //-------------------
+    // USER
+    //-------------------
 
-        const portfolioRes = await api.get("/portfolios/my", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        setUser(userRes.data.user);
-        setPortfolios(portfolioRes.data.portfolios);
-      } catch (error) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        router.push("/login");
-      } finally {
-        setLoading(false);
+    const userRes = await fetch(
+      "http://localhost:5000/api/auth/me",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
-    };
-
-    fetchData();
-  }, [router]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950 text-white">
-        Loading...
-      </div>
     );
+
+    const userData = await userRes.json();
+
+    if (userData.success) {
+      setUser(userData.user);
+    }
+
+    //-------------------
+    // PORTFOLIOS
+    //-------------------
+
+    const portfolioRes = await fetch(
+      "http://localhost:5000/api/v1/portfolios",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const portfolioData =
+      await portfolioRes.json();
+
+    if (portfolioData.success) {
+      setPortfolios(
+        portfolioData.portfolios
+      );
+    }
+  }
+
+  function logout() {
+    Cookies.remove("token");
+    router.push("/login");
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-6">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold mb-2">
-          Welcome {user?.full_name}
-        </h1>
-        <p className="text-gray-400 mb-8">{user?.email}</p>
+    <div className="flex min-h-screen bg-gray-100">
 
-        <h2 className="text-2xl font-semibold mb-4">My Portfolios</h2>
+      <Sidebar />
 
-        <div className="grid gap-4">
-          {portfolios.length === 0 ? (
-            <p className="text-gray-400">No portfolios found.</p>
-          ) : (
-            portfolios.map((portfolio) => (
-              <div
-                key={portfolio.id}
-                className="rounded-2xl border border-gray-800 bg-gray-900 p-5"
-              >
-                <h3 className="text-xl font-semibold">{portfolio.title}</h3>
-                <p className="text-gray-400 mt-2">{portfolio.description}</p>
-              </div>
-            ))
-          )}
+      <main className="flex-1 p-8">
+
+        <DashboardHeader
+          user={user}
+          onLogout={logout}
+          onNewPortfolio={() =>
+            alert("Coming Soon 🚀")
+          }
+        />
+
+        <DashboardStats
+          total={portfolios.length}
+        />
+
+        <QuickActions />
+
+        <div className="mt-10">
+
+          <PortfolioGrid
+            portfolios={portfolios}
+          />
+
         </div>
-      </div>
+
+      </main>
+
     </div>
   );
 }
