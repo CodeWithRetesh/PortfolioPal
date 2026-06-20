@@ -15,97 +15,104 @@ export default function DashboardPage() {
 
   const [user, setUser] = useState(null);
   const [portfolios, setPortfolios] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadDashboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadDashboard() {
-    const token = Cookies.get("token");
+    try {
+      const token = Cookies.get("token");
 
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+      if (!token) {
+        router.replace("/login");
+        return;
+      }
 
-    //-------------------
-    // USER
-    //-------------------
-
-    const userRes = await fetch(
-      "http://localhost:5000/api/auth/me",
-      {
+      const userRes = await fetch("http://localhost:5000/api/auth/me", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+      });
+
+      const userData = await userRes.json();
+
+      if (!userRes.ok || !userData.success) {
+        Cookies.remove("token");
+        router.replace("/login");
+        return;
       }
-    );
 
-    const userData = await userRes.json();
-
-    if (userData.success) {
       setUser(userData.user);
-    }
 
-    //-------------------
-    // PORTFOLIOS
-    //-------------------
-
-    const portfolioRes = await fetch(
-      "http://localhost:5000/api/v1/portfolios",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const portfolioData =
-      await portfolioRes.json();
-
-    if (portfolioData.success) {
-      setPortfolios(
-        portfolioData.portfolios
+      const portfolioRes = await fetch(
+        "http://localhost:5000/api/v1/portfolios/my",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
+      const portfolioData = await portfolioRes.json();
+
+      if (portfolioRes.ok && portfolioData.success) {
+        setPortfolios(portfolioData.portfolios || []);
+      } else {
+        setPortfolios([]);
+      }
+    } catch (error) {
+      console.error("Dashboard load error:", error);
+      Cookies.remove("token");
+      router.replace("/login");
+    } finally {
+      setLoading(false);
     }
   }
 
   function logout() {
     Cookies.remove("token");
-    router.push("/login");
+    router.replace("/login");
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
+        Loading dashboard...
+      </div>
+    );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-
+    <div className="flex min-h-screen bg-slate-950 text-white">
       <Sidebar />
 
-      <main className="flex-1 p-8">
-
+      <main className="flex-1 p-8 bg-slate-950">
         <DashboardHeader
           user={user}
           onLogout={logout}
-          onNewPortfolio={() =>
-            alert("Coming Soon 🚀")
-          }
+          onNewPortfolio={() => alert("Coming Soon 🚀")}
         />
 
-        <DashboardStats
-          total={portfolios.length}
-        />
+        <DashboardStats total={portfolios.length} />
 
         <QuickActions />
 
         <div className="mt-10">
-
-          <PortfolioGrid
-            portfolios={portfolios}
-          />
-
+          <PortfolioGrid portfolios={portfolios} />
         </div>
 
+        <div className="mt-6">
+          <a
+            href="/dashboard/resume-builder"
+            className="inline-block bg-purple-600 px-4 py-2 rounded"
+          >
+            AI Resume Builder
+          </a>
+        </div>
       </main>
-
     </div>
   );
 }

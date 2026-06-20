@@ -181,3 +181,59 @@ export const deletePortfolio = async (req, res) => {
     });
   }
 };
+
+// Save AI Generated Portfolio
+
+export const saveGeneratedPortfolio = async (req, res) => {
+  try {
+    const {
+      title,
+      portfolio,
+    } = req.body;
+
+    if (!title || !portfolio) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and portfolio data are required",
+      });
+    }
+
+    const slug =
+      title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+
+    const { data, error } = await supabase
+      .from("portfolios")
+      .insert([
+        {
+          user_id: req.user.id,
+          title,
+          portfolio_data: portfolio,
+          slug,
+          is_published: false,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return res.status(201).json({
+      success: true,
+      portfolio: data,
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

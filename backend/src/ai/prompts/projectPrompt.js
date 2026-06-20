@@ -1,151 +1,83 @@
-const projectPrompt = ({
-  title,
-  domain,
-  difficulty,
-  techStack,
-  programmingLanguage,
-  goal,
-  targetUsers,
-  requirements,
-}) => `
-You are a Senior Software Engineer, Technical Architect, Researcher, and Professional Technical Documentation Writer.
+import systemPrompt from "./systemPrompt.js";
 
-Your responsibility is to generate a COMPLETE, PROFESSIONAL, and WELL-FORMATTED software project documentation for college students.
+export function buildProjectPrompt(data) {
+  return `
+${systemPrompt}
 
-The documentation should look like a real Final Year Project Report.
+You are an expert Software Architect, Technical Writer, and Senior Full Stack Developer.
 
-========================================
-PROJECT INFORMATION
-========================================
+Generate a complete software project documentation based on the following project details.
 
-Project Title:
-${title}
+=========================
+PROJECT DETAILS
+=========================
 
-Project Domain:
-${domain}
+Title:
+${data.title}
+The project title must match the user-provided title exactly. Do not invent a different project name.
 
-Difficulty Level:
-${difficulty}
+Domain:
+${data.domain}
 
-Technology Stack:
-${techStack}
+Difficulty:
+${data.difficulty}
 
 Programming Language:
-${programmingLanguage}
+${data.programmingLanguage}
 
-Project Goal:
-${goal}
+Tech Stack:
+${data.techStack}
+
+Goal:
+${data.goal}
 
 Target Users:
-${targetUsers}
+${data.targetUsers}
 
-Additional Requirements:
-${requirements || "None"}
+Requirements:
+${data.requirements}
 
-========================================
+=========================
+OUTPUT FORMAT
+=========================
 
-Generate the project in professional markdown format.
+Return ONLY a valid JSON object.
 
-The response MUST include the following sections in order.
+The JSON MUST contain the following fields:
 
-# Project Title
+{
+  "title": "",
+  "abstract": "",
+  "problemStatement": "",
+  "objectives": [],
+  "features": [],
+  "targetUsers": "",
+  "techStack": {
+    "frontend": "",
+    "backend": "",
+    "database": "",
+    "ai": ""
+  },
+  "systemArchitecture": "",
+  "modules": [],
+  "databaseSchema": [],
+  "apiEndpoints": [],
+  "projectStructure": [],
+  "futureEnhancements": [],
+  "conclusion": ""
+}
 
-# Abstract
+Rules:
 
-# Introduction
-
-# Problem Statement
-
-# Objectives
-
-# Existing System
-
-# Proposed System
-
-# Key Features
-
-# Functional Requirements
-
-# Non Functional Requirements
-
-# Technology Stack
-
-# System Modules
-
-Explain every module in detail.
-
-# System Workflow
-
-Explain step by step.
-
-# Database Design
-
-Suggest database tables if required.
-
-# API Design
-
-Suggest REST API endpoints.
-
-# System Architecture
-
-Explain the complete architecture.
-
-# Advantages
-
-# Limitations
-
-# Future Scope
-
-# Conclusion
-
-# GitHub README
-
-Generate a professional README.
-
-# Portfolio Description
-
-Generate a short portfolio description.
-
-# Resume Description
-
-Generate an ATS-friendly resume project description.
-
-# LinkedIn Description
-
-Generate a professional LinkedIn project description.
-
-# Viva Questions
-
-Generate at least 15 viva questions with answers.
-
-# PPT Outline
-
-Generate presentation slide outline.
-
-========================================
-
-Rules
-
-1. Use professional English.
-
-2. Use proper headings.
-
-3. Use bullet points wherever necessary.
-
-4. Do not skip any section.
-
-5. Generate realistic technical content.
-
-6. Use markdown formatting.
-
-7. Do not use placeholder text.
-
-8. Make the project unique.
-
-9. Explain every module clearly.
-
-10. Output only the documentation.
+1. Return ONLY JSON.
+2. Do NOT return Markdown.
+3. Do NOT use \`\`\`json.
+4. Do NOT explain anything.
+5. Do NOT add notes.
+6. Do NOT add extra text before or after the JSON.
+7. Every field must contain meaningful content.
+8. Arrays must contain multiple items where appropriate.
+9. The JSON must be valid and parsable.
 
 `;
-
-export default projectPrompt;
+}
